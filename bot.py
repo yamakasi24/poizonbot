@@ -130,7 +130,7 @@ def go_to_main_menu(message):
     markup.add(btn7, btn8)
     btn9 = types.InlineKeyboardButton('Комиссия сервиса 🫰🏼', callback_data='commision')
     markup.add(btn9)
-    btn10 = types.InlineKeyboardButton('Задать вопрос ✍️', url= 'https://t.me/yamakasi24')
+    btn10 = types.InlineKeyboardButton('Задать вопрос ✍️', url= 'https://t.me/SneakerGik')
     markup.add(btn10)
     btn11 = types.InlineKeyboardButton('Cкачать Poizon iOS', url='https://apps.apple.com/ru/app/%E5%BE%97%E7%89%A9-%E5%BE%97%E5%88%B0%E8%BF%90%E5%8A%A8x%E6%BD%AE%E6%B5%81x%E5%A5%BD%E7%89%A9/id1012871328')
     markup.add(btn11)
@@ -254,7 +254,7 @@ def callback_massage(callback):
             "- Способ доставки (Обычная или экспресс)",
 
         reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("Связаться", url="https://t.me/yamakasi24")
+                types.InlineKeyboardButton("Связаться", url="https://t.me/SneakerGik")
             )
         )
 
