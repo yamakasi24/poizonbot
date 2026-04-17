@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
+print("TOKEN:", TOKEN)
 bot = telebot.TeleBot(TOKEN)
 
 yuan_rate = 13  # Текущий курс юаня
