@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import telebot
+import os
 import time
 import sqlite3
 from datetime import datetime
 
 from telebot import types
 
-
-bot = telebot.TeleBot('API_KEY')
+TOKEN = os.getenv("Bot_Token")
+bot = telebot.TeleBot(TOKEN)
 
 yuan_rate = 13  # Текущий курс юаня
 service_fee = 490  # Комиссия сервиса
