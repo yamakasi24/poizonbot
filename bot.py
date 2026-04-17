@@ -10,7 +10,7 @@ from telebot import types
 from dotenv import load_dotenv
 load_dotenv()
 
-TOKEN = os.getenv("Bot_Token")
+TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 yuan_rate = 13  # Текущий курс юаня
