@@ -8,7 +8,7 @@ from datetime import datetime
 from telebot import types
 
 
-bot = telebot.TeleBot('7866874348:AAFTKziCcNvQKZUCvX2c9xkxF9WPBOE9S9Q')
+bot = telebot.TeleBot('API_KEY')
 
 yuan_rate = 13  # Текущий курс юаня
 service_fee = 490  # Комиссия сервиса
