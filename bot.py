@@ -11,7 +11,7 @@ from telebot import types
 bot = telebot.TeleBot('7866874348:AAFTKziCcNvQKZUCvX2c9xkxF9WPBOE9S9Q')
 
 yuan_rate = 13  # Текущий курс юаня
-service_fee = 990  # Комиссия сервиса
+service_fee = 490  # Комиссия сервиса
 
 
 
@@ -46,7 +46,7 @@ def set_service_fee(message):
         bot.send_message(message.chat.id, "У вас нет прав для использования этой команды.")
 
 
-
+@bot.message_handler(commands=['start'])
 def start_command(message):
     connect = None
     cursor = None
@@ -93,8 +93,7 @@ def start_command(message):
         if connect is not None:
             connect.close()
 
-@bot.message_handler(commands=['start'])
-def start_command(message):
+
     # Создание кнопки "Главное меню 🏠"
     reply_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     main_menu_button = types.KeyboardButton("Главное меню 🏠")
@@ -107,6 +106,96 @@ def start_command(message):
         '\n\nНажмите «Главное меню 🏠» для начала работы',
         reply_markup=reply_markup
     )
+
+
+from telebot.apihelper import ApiTelegramException
+
+@bot.message_handler(commands=['send_photo'])
+def send_photo_all(message):
+    if message.chat.id != ADMIN_ID:
+        return
+
+    msg = bot.send_message(message.chat.id, "Отправь фото с подписью (это и будет рассылка)")
+    bot.register_next_step_handler(msg, process_photo_broadcast)
+
+
+def process_photo_broadcast(message):
+    if not message.photo:
+        bot.send_message(message.chat.id, "Нужно отправить именно фото")
+        return
+
+    photo_id = message.photo[-1].file_id
+    caption = message.caption if message.caption else ""
+
+    connect = None
+    cursor = None
+
+    try:
+        connect = sqlite3.connect("users.db")
+        cursor = connect.cursor()
+
+        cursor.execute("SELECT id FROM users")
+        users = cursor.fetchall()
+
+        total = len(users)
+        success = 0
+        failed = 0
+
+        bot.send_message(message.chat.id, f"🚀 Начинаю рассылку по {total} пользователям")
+
+        for i, user in enumerate(users):
+            user_id = user[0]
+
+            try:
+                bot.send_photo(user_id, photo_id, caption=caption)
+                success += 1
+
+            except ApiTelegramException as tg_error:
+                failed += 1
+                print(f"Telegram ошибка {user_id}: {tg_error}")
+
+            except Exception as other_error:
+                failed += 1
+                print(f"Другая ошибка {user_id}: {other_error}")
+
+            # анти-бан
+            time.sleep(0.05)
+
+            if i % 25 == 0 and i != 0:
+                time.sleep(1)
+
+        bot.send_message(
+            message.chat.id,
+            f"✅ Готово\n\nОтправлено: {success}\nОшибки: {failed}"
+        )
+
+    except sqlite3.Error as db_error:
+        bot.send_message(message.chat.id, f"Ошибка БД: {db_error}")
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if connect is not None:
+            connect.close()
+
+
+@bot.message_handler(commands=['check_db'])
+def check_db(message):
+    connect = sqlite3.connect("users.db")
+    cursor = connect.cursor()
+
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+
+    cursor.close()
+    connect.close()
+
+    bot.send_message(message.chat.id, f"В базе {len(users)} пользователей")
+
+
+
+
+
 
 @bot.message_handler(func=lambda message: message.text == "Главное меню 🏠")
 def go_to_main_menu(message):
@@ -130,7 +219,7 @@ def go_to_main_menu(message):
     markup.add(btn7, btn8)
     btn9 = types.InlineKeyboardButton('Комиссия сервиса 🫰🏼', callback_data='commision')
     markup.add(btn9)
-    btn10 = types.InlineKeyboardButton('Задать вопрос ✍️', url= 'https://t.me/SneakerGik')
+    btn10 = types.InlineKeyboardButton('Задать вопрос ✍️', url= 'https://t.me/yamakasi24')
     markup.add(btn10)
     btn11 = types.InlineKeyboardButton('Cкачать Poizon iOS', url='https://apps.apple.com/ru/app/%E5%BE%97%E7%89%A9-%E5%BE%97%E5%88%B0%E8%BF%90%E5%8A%A8x%E6%BD%AE%E6%B5%81x%E5%A5%BD%E7%89%A9/id1012871328')
     markup.add(btn11)
@@ -176,7 +265,7 @@ def callback_massage(callback):
     elif callback.data == 'exchange':
         bot.send_message(callback.message.chat.id, f"Текущий курс юаня: {yuan_rate} ₽ \n \n"
                                                    f"Почему наш курс выше чем курс ЦБ?\n \n"
-                                                   f"Курс Центробанка — это справочная цифра и не отражает реальные условия обмена валюты. В обменниках и банках курс всегда выше, поскольку включает наценки, комиссии за переводы и другие издержки связанные c оборотом валюты 🇨🇳")
+                                                   f"Курс Центробанка — это справочная цифра, по которой валюту никто не продает. В обменниках и банках курс всегда выше, потому что туда включают наценки и комиссии за переводы 🇨🇳")
 
 
     elif callback.data == 'commision':
@@ -193,6 +282,7 @@ def callback_massage(callback):
 
 
     elif callback.data == 'ship':
+
         bot.send_message(callback.message.chat.id, "Poizon -> склад в Китае 🇨🇳\n \nДоставка Poizon в среднем занимает 3-5 дней в зависимости от товара, сроки доставки вы можете увидеть справа от цены. \n \n"
                                                     "🇨🇳 Китай -> Москва 🇷🇺 \n \n"
                                                    "После получения товара на складе в Китае ваш товар упаковывается и отправляется в Москву, после отправки доставка занимает:\n \n9 - 13 дней экспресс доставка \n19 - 25 дней обычная доставка \n\n(зимой могут быть задержки связанные с погодными условиями) \n \n"
@@ -206,7 +296,7 @@ def callback_massage(callback):
 
         # Кнопки FAQ
         btn1 = types.InlineKeyboardButton('Что такое Poizon?', url= "https://teletype.in/@s-96032/qWbwSSHskP5")
-        btn2 = types.InlineKeyboardButton('Как поменять язык на Poizon?', callback_data='change_language')
+        btn2 = types.InlineKeyboardButton('Как поменять язык на Poizon?', url= "https://teletype.in/@s-96032/EXRYNMuRFgq")
         btn3 = types.InlineKeyboardButton('На Poizon оригинал?', url= "https://teletype.in/@s-96032/22oaM12XMgM")
         btn4 = types.InlineKeyboardButton('Как правильно подобрать размер 📏', url="https://teletype.in/@s-96032/mMsR6yKSaME")
         btn5 = types.InlineKeyboardButton('В какие страны доставляете?', callback_data='countries')
@@ -222,18 +312,7 @@ def callback_massage(callback):
         # Отправляем сообщение с кнопками
         bot.send_message(callback.message.chat.id, "Выберите интересующий вас вопрос:", reply_markup=markup)
 
-    elif callback.data == 'change_language':
-        image_url = 'https://postimg.cc/Sn7Hyz3P'
-        bot.send_photo(
-            callback.message.chat.id,
-            image_url,
-            caption=(
-                "В приложении Poizon невозможно поменять язык интерфейса. Официальное приложение доступно только на китайском языке, так как ориентировано на внутренний рынок Китая. \n \n"
-                "Однако если вам трудно пользоваться приложением на китайском, вы можете установить приложение Poizon на английском языке, но с некоторыми ограничениями. Версия на английском ориентирована на международных пользователей,"
-                " в первую очередь из стран Юго-Восточной Азии, Америки и других регионов.\n \n"
-                "Установить версию на английском можно в App Store"
-            )
-        )
+
 
     elif callback.data == 'countries':
         bot.send_message(callback.message.chat.id,
@@ -254,7 +333,7 @@ def callback_massage(callback):
             "- Способ доставки (Обычная или экспресс)",
 
         reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("Связаться", url="https://t.me/SneakerGik")
+                types.InlineKeyboardButton("Связаться", url="https://t.me/yamakasi24")
             )
         )
 
@@ -271,10 +350,10 @@ def get_price(message, category):
         item_price = float(message.text)
         delivery_costs = {
             'jackets': 1890,
-            'hoodies': 990,
+            'hoodies': 1090,
             'shirts': 890,
             'tshirt': 790,
-            'jeans': 990,
+            'jeans': 1090,
             'boots': 2390,
             'sneakers': 1690,
             'underwear': 490,
